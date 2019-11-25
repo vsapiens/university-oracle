@@ -115,7 +115,7 @@ UPDATE campusClub SET members = studUdtAux (
 -- 15 estudiantes en Club3
 UPDATE campusClub SET members = studUdtAux (
 						(SELECT REF(s) FROM Student s WHERE s.pId='3'),
-						(SELECT REF(s) FROM Student s WHERE s.pId='4')
+						(SELECT REF(s) FROM Student s WHERE s.pId='4'),
 						(SELECT REF(s) FROM Student s WHERE s.pId='5'),
 						(SELECT REF(s) FROM Student s WHERE s.pId='7'),
 						(SELECT REF(s) FROM Student s WHERE s.pId='8'),

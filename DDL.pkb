@@ -1,138 +1,169 @@
-drop type personUdt FORCE;
-drop type facultyUdt FORCE;
-drop type locationUdt FORCE;
-drop type studentUdt FORCE;
-drop type campusClubUdt FORCE;
-drop type studUdtAux FORCE;
-drop table faculty;
-drop table person;
-drop table student;
-drop table campusClub;
-drop table department;
-drop type departmentUdt FORCE;
-drop type campusClubAux FORCE;
-drop type studArr FORCE;
-drop type facultyArr FORCE;
+DROP TYPE personudt FORCE;
 
-create type personUdt AS OBJECT
-(pid varchar(11),
-firstName varchar(20),
-lastName varchar(20),
-dob date)
-instantiable not final;
+DROP TYPE facultyudt FORCE;
+
+DROP TYPE locationudt FORCE;
+
+DROP TYPE studentudt FORCE;
+
+DROP TYPE campusclubudt FORCE;
+
+DROP TYPE stududtaux FORCE;
+
+DROP TABLE faculty;
+
+DROP TABLE person;
+
+DROP TABLE student;
+
+DROP TABLE campusclub;
+
+DROP TABLE department;
+
+DROP TYPE departmentudt FORCE;
+
+DROP TYPE campusclubaux FORCE;
+
+DROP TYPE studarr FORCE;
+
+DROP TYPE facultyarr FORCE;
+
+CREATE TYPE personudt AS OBJECT (
+    pid         VARCHAR(11),
+    firstname   VARCHAR(20),
+    lastname    VARCHAR(20),
+    dob         DATE
+) INSTANTIABLE NOT FINAL;
 /
 
-CREATE TYPE locationUdt AS OBJECT
-(street varchar(30),
-bldg varchar(5),
-room varchar(5)
-)not final;
+CREATE TYPE locationudt AS OBJECT (
+    street   VARCHAR(30),
+    bldg     VARCHAR(5),
+    room     VARCHAR(5)
+) NOT FINAL;
 /
 
-create type facultyUdt under personUdt(
-rank varchar(10),
-salary number(10)
-) instantiable not final;
+CREATE TYPE facultyudt UNDER personudt (
+    rank     VARCHAR(10),
+    salary   NUMBER(10)
+) INSTANTIABLE NOT FINAL;
 /
 
-create type studentUdt under personUdt
-( status varchar(10)
-) instantiable not final;
+CREATE TYPE studentudt UNDER personudt (
+    status VARCHAR(10)
+) INSTANTIABLE NOT FINAL;
 /
 
-create table person of personUdt(pid PRIMARY KEY)  OBJECT IDENTIFIER IS SYSTEM GENERATED;
+CREATE TABLE person OF personudt (
+    pid PRIMARY KEY
+) OBJECT IDENTIFIER IS SYSTEM GENERATED;
 
-create table faculty of facultyUdt;
+CREATE TABLE faculty OF facultyudt;
 
-create table student of studentUdt;
+CREATE TABLE student OF studentudt;
 
+CREATE TYPE stududtaux AS
+    VARRAY(50) OF ref
 
-create type studUdtAux as VARRAY(50) of REF studentUdt;
+studentudt;
 /
 
-create type campusClubUdt as OBJECT
-( cId number, 
-name varchar(50), 
-location locationUdt, 
-phone varchar(12), 
-advisor REF facultyUdt,
-members studUdtAux
-) instantiable not final
-;
+CREATE TYPE campusclubudt AS OBJECT (
+    cid        NUMBER,
+    name       VARCHAR(50),
+    location   locationudt,
+    phone      VARCHAR(12),
+    advisor    REF facultyudt,
+    members    stududtaux
+) INSTANTIABLE NOT FINAL;
 /
 
-create table campusClub of campusClubUdt(
-CONSTRAINT cIdPK PRIMARY KEY (cId), 
-advisor SCOPE IS faculty
-)
-OBJECT IDENTIFIER IS SYSTEM GENERATED;
+CREATE TABLE campusclub OF campusclubudt (
+    CONSTRAINT cidpk PRIMARY KEY ( cid ),
+    advisor
+        SCOPE IS faculty
+) OBJECT IDENTIFIER IS SYSTEM GENERATED;
 /
 
-create type studArr as VARRAY(1000) of REF studentUdt;
- /
- 
-create type facultyArr as VARRAY(1000) of REF facultyUdt;
-  /
+CREATE TYPE studarr AS
+    VARRAY(1000) OF ref
 
+studentudt;
+/
 
-CREATE TYPE departmentUdt AS OBJECT (
-  code varchar(3),
-  name varchar(40),
-  deptChair REF facultyUdt,
-  MEMBER FUNCTION getStudents(arg1 in Number) RETURN studArr,
-  MEMBER FUNCTION getFactulty(arg1 in Number) RETURN facultyArr
-  )instantiable not final;
-  /
+CREATE TYPE facultyarr AS
+    VARRAY(50) OF ref
 
- ALTER TYPE studentUdt ADD ATTRIBUTE (
-   major REF departmentUdt
- )CASCADE;
+facultyudt;
 /
-  
-CREATE TABLE department of departmentUdt(
-  CONSTRAINT dep_PK PRIMARY KEY(code),
-  deptChair SCOPE IS faculty 
- )OBJECT IDENTIFIER IS SYSTEM GENERATED;
- 
- create type campusClubAux as VARRAY(5) of REF campusClubUdt;
- /
-   
- ALTER TYPE facultyUdt ADD ATTRIBUTE (
-   advisorOF campusClubAux,
-   worksIn REF departmentUdt,
-   chairOf REF departmentUdt
- )CASCADE;
- /
-  ALTER TYPE studentUdt ADD ATTRIBUTE (
-   memberOf campusClubAux
- )CASCADE;
- /
- 
- ALTER TABLE faculty add CONSTRAINT check_rank CHECK (rank IN ('Instructor', 'Asistente', 'Asociado', 'Titular'));
- /
- ALTER TABLE student add CONSTRAINT check_status CHECK (status IN ('freshman', 'sophomore', 'junior', 'senior'));
- /
-  ALTER TABLE faculty ADD(
-    SCOPE FOR (worksIn) IS department,
-    SCOPE FOR (chairOf) is department
-  ); 
+
+CREATE TYPE departmentudt AS OBJECT (
+    code        VARCHAR(3),
+    name        VARCHAR(40),
+    deptchair   REF facultyudt,
+    MEMBER FUNCTION getstudents (
+           arg1 IN VARCHAR
+       ) RETURN studarr,
+    MEMBER FUNCTION getfaculty (
+           arg1 IN VARCHAR
+       ) RETURN facultyarr
+) INSTANTIABLE NOT FINAL;
 /
-    ALTER TABLE student ADD(
-      SCOPE FOR (major) is department
-); 
+
+ALTER TYPE studentudt ADD ATTRIBUTE ( major REF departmentudt )
+    CASCADE;
 /
- ALTER TABLE faculty 
-      ADD CONSTRAINT dirDept CHECK (worksIn = chairOf) ENABLE;
+
+CREATE TABLE department OF departmentudt (
+    CONSTRAINT dep_pk PRIMARY KEY ( code ),
+    deptchair
+        SCOPE IS faculty
+) OBJECT IDENTIFIER IS SYSTEM GENERATED;
+
+CREATE TYPE campusclubaux AS
+    VARRAY(5) OF ref
+
+campusclubudt;
 /
-/*
-CREATE OR REPLACE TYPE BODY departmentUdt AS
-	MEMBER FUNCTION getStudents(arg1 in Number) RETURN studArr IS
-		cosa studArr;
-		BEGIN
-			Select REF(s) BULK COLLECT into cosa from student S where ROWNUM<=50 AND deref(major).code = arg1;
-			RETURN cosa;
-		END;
-END;
+
+ALTER TYPE facultyudt ADD ATTRIBUTE ( advisorof campusclubaux, worksin REF departmentudt, chairof REF departmentudt )
+    CASCADE;
 /
-*/
-commit;
+
+ALTER TYPE studentudt ADD ATTRIBUTE ( memberof campusclubaux )
+    CASCADE;
+/
+
+ALTER TABLE faculty
+    ADD CONSTRAINT check_rank CHECK ( rank IN (
+        'Instructor',
+        'Asistente',
+        'Asociado',
+        'Titular'
+    ) );
+/
+
+ALTER TABLE student
+    ADD CONSTRAINT check_status CHECK ( status IN (
+        'freshman',
+        'sophomore',
+        'junior',
+        'senior'
+    ) );
+/
+
+ALTER TABLE faculty ADD (
+    SCOPE FOR ( worksin ) IS department,
+    SCOPE FOR ( chairof ) IS department
+);
+/
+
+ALTER TABLE student ADD (
+    SCOPE FOR ( major ) IS department
+);
+/
+
+ALTER TABLE faculty ADD CONSTRAINT dirdept CHECK ( worksin = chairof ) ENABLE;
+/
+
+COMMIT;

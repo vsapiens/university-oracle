@@ -9,3 +9,12 @@ FROM THE (SELECT c.members FROM campusClub c WHERE c.cid = 101)
 Select deref(Advisor).firstName || ' ' || deref(Advisor).lastName as "Avisor Name",deref(Advisor).rank as "Rank", deref(deref(Advisor).worksin).name as "Dpt. Name"
 from CampusClub c
 WHERE c.name = 'Club2'
+
+--Get Students
+Select * from Student
+--Get Faculty
+Select * from Department
+--Get CampusClub
+Select * from CampusClub
+--Get Faculty
+Select * from Faculty
